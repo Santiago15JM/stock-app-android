@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -172,6 +173,8 @@ fun Recommendations(vm: HomeViewModel, nav: NavController, innerPadding: Padding
 
 @Composable
 fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingValues) {
+    val listState = rememberLazyListState()
+
     LaunchedEffect(
         vm.searchValue,
         vm.selectedSorting,
@@ -179,6 +182,7 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
         vm.searchActive
     ) {
         vm.updateQueriedStocks()
+        listState.scrollToItem(0)
     }
 
     Column(
@@ -280,7 +284,8 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                state = listState
             ) {
                 items(vm.loadedStocks, key = { it.ticker }) {
                     StockItem(it, nav)

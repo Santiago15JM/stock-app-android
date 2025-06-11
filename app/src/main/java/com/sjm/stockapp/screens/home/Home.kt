@@ -175,7 +175,8 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
     LaunchedEffect(
         vm.searchValue,
         vm.selectedSorting,
-        vm.ascendingSorting
+        vm.ascendingSorting,
+        vm.searchActive
     ) {
         vm.updateQueriedStocks()
     }
@@ -235,9 +236,9 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
                         }
                     }
 
-                    IconButton(onClick = { vm.showSearch = !vm.showSearch }) {
+                    IconButton(onClick = { vm.searchActive = !vm.searchActive }) {
                         Icon(
-                            if (vm.showSearch) Icons.Default.Close else Icons.Default.Search,
+                            if (vm.searchActive) Icons.Default.Close else Icons.Default.Search,
                             "Search",
                             modifier = Modifier.size(30.dp)
                         )
@@ -246,7 +247,7 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
 
             }
 
-            AnimatedVisibility(vm.showSearch) {
+            AnimatedVisibility(vm.searchActive) {
                 OutlinedTextField(
                     vm.searchValue,
                     placeholder = { Text("Search ticker, company name or brokerage") },

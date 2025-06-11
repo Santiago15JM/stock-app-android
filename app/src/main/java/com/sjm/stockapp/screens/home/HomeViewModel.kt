@@ -25,7 +25,7 @@ class HomeViewModel : ViewModel() {
 
     var selectedPage by mutableStateOf("RECOMMENDATIONS")
 
-    var showSearch by mutableStateOf(false)
+    var searchActive by mutableStateOf(false)
     var searchValue by mutableStateOf("")
 
     var sortExpanded by mutableStateOf(false)
@@ -47,17 +47,17 @@ class HomeViewModel : ViewModel() {
             delay(500)
 
             val queriedStocks = Api.queryStocks(
-                search = searchValue,
+                search = if (searchActive) searchValue else "",
                 sortingType = selectedSorting,
                 ascending = ascendingSorting
             ).orEmpty()
+
             loadedStocks.clear()
             loadedPage = 0
             endOfList = false
             if (queriedStocks.size < 50) endOfList = true
             loadedStocks.addAll(queriedStocks)
         }
-
     }
 
     fun loadMore() {

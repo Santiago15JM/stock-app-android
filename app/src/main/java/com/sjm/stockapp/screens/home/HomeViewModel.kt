@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.sjm.stockapp.logic.Api
 import com.sjm.stockapp.logic.models.ScoredStock
 import com.sjm.stockapp.logic.models.Stock
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class HomeViewModel : ViewModel() {
@@ -30,23 +32,32 @@ class HomeViewModel : ViewModel() {
     var selectedSorting by mutableStateOf(SortOption.TICKER)
     var ascendingSorting by mutableStateOf(true)
 
+    private var requestJob: Job? = null
+
     init {
         viewModelScope.launch {
             scoredStocks.addAll(Api.getRecommendations().orEmpty())
         }
     }
 
-    suspend fun updateQueriedStocks() {
-        val queriedStocks = Api.queryStocks(
-            search = searchValue,
-            sortingType = selectedSorting,
-            ascending = ascendingSorting
-        ).orEmpty()
-        loadedStocks.clear()
-        loadedPage = 0
-        endOfList = false
-        if (queriedStocks.size < 50) endOfList = true
-        loadedStocks.addAll(queriedStocks)
+    fun updateQueriedStocks() {
+        requestJob?.cancel()
+
+        requestJob = viewModelScope.launch {
+            delay(500)
+
+            val queriedStocks = Api.queryStocks(
+                search = searchValue,
+                sortingType = selectedSorting,
+                ascending = ascendingSorting
+            ).orEmpty()
+            loadedStocks.clear()
+            loadedPage = 0
+            endOfList = false
+            if (queriedStocks.size < 50) endOfList = true
+            loadedStocks.addAll(queriedStocks)
+        }
+
     }
 
     fun loadMore() {

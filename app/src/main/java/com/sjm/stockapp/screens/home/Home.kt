@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -125,45 +126,58 @@ fun Recommendations(vm: HomeViewModel, nav: NavController, innerPadding: Padding
                 Text("Est. Imp.")
             }
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                items(vm.scoredStocks, key = { it.stock.ticker }) {
-                    if (it == vm.scoredStocks[0]) {
-                        Box(Modifier.height(62.dp)) {
-                            Surface(
-                                color = Green, shape = RoundedCornerShape(6.dp),
-                                modifier = Modifier
-                                    .zIndex(1f)
-                                    .offset(x = 2.dp)
-                            ) {
-                                Text(
-                                    "Best choice",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight(900),
-                                    modifier = Modifier.padding(horizontal = 4.dp)
-                                )
+            if (vm.scoredStocks.isEmpty())
+                Text("Theres no current recommendations")
+            else
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    items(vm.scoredStocks, key = { it.stock.ticker }) {
+                        if (it == vm.scoredStocks[0]) {
+                            Box(Modifier.height(62.dp)) {
+                                Surface(
+                                    color = Green, shape = RoundedCornerShape(6.dp),
+                                    modifier = Modifier
+                                        .zIndex(1f)
+                                        .offset(x = 2.dp)
+                                ) {
+                                    Text(
+                                        "Best choice",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight(900),
+                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                    )
+                                }
+                                Surface(
+                                    border = BorderStroke(2.dp, Green),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.offset(y = 14.dp)
+                                ) {
+                                    StockItem(it.stock, nav)
+                                }
                             }
-                            Surface(
-                                border = BorderStroke(2.dp, Green),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.offset(y = 14.dp)
-                            ) {
-                                StockItem(it.stock, nav)
-                            }
-                        }
-                    } else StockItem(it.stock, nav)
-                    if (it != vm.scoredStocks.last()) HorizontalDivider(Modifier.fillMaxWidth(0.95f))
+                        } else StockItem(it.stock, nav)
+                        if (it != vm.scoredStocks.last()) HorizontalDivider(
+                            Modifier.fillMaxWidth(
+                                0.95f
+                            )
+                        )
+                    }
                 }
-            }
         }
     }
 }
 
 @Composable
 fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingValues) {
-    LaunchedEffect(vm.searchValue, vm.selectedSorting) { vm.updateQueriedStocks() }
+    LaunchedEffect(
+        vm.searchValue,
+        vm.selectedSorting,
+        vm.ascendingSorting
+    ) {
+        vm.updateQueriedStocks()
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -264,11 +278,18 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items(vm.loadedStocks, key = { it.ticker }) {
                     StockItem(it, nav)
                     if (it != vm.loadedStocks.last())
                         HorizontalDivider(Modifier.fillMaxWidth(0.95f))
+                }
+                item {
+                    if (vm.endOfList)
+                        Text("You reached the end of the list")
+                    else
+                        Button({ vm.loadMore() }) { Text("Load more") }
                 }
             }
     }

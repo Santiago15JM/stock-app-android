@@ -12,14 +12,13 @@ interface StockApi {
     @GET("/recommendation")
     suspend fun getRecommendations(): Response<List<ScoredStock>>
 
-    @GET("/stocks")
-    suspend fun getStocks(@Query("page") page: Int): Response<List<Stock>>
-
-    @GET("/filtered-stocks")
+    @GET("/query-stocks")
     suspend fun getQueryStocks(
         @Query("search") search: String,
         @Query("sortingType") sortingType: SortOption,
-        @Query("ascending") ascending: Boolean
+        @Query("ascending") ascending: Boolean,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int = 50,
     ): Response<List<Stock>>
 
 }

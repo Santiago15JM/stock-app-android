@@ -16,6 +16,10 @@ class HomeViewModel : ViewModel() {
         private set
     var loadedStocks = mutableStateListOf<Stock>()
         private set
+    var loadedPage = 0
+        private set
+    var endOfList by mutableStateOf(false)
+        private set
 
     var selectedPage by mutableStateOf("RECOMMENDATIONS")
 
@@ -30,9 +34,6 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             scoredStocks.addAll(Api.getRecommendations().orEmpty())
         }
-        viewModelScope.launch {
-            loadedStocks.addAll(Api.getStocks(0).orEmpty())
-        }
     }
 
     suspend fun updateQueriedStocks() {
@@ -42,7 +43,26 @@ class HomeViewModel : ViewModel() {
             ascending = ascendingSorting
         ).orEmpty()
         loadedStocks.clear()
+        loadedPage = 0
+        endOfList = false
+        if (queriedStocks.size < 50) endOfList = true
         loadedStocks.addAll(queriedStocks)
+    }
+
+    fun loadMore() {
+        viewModelScope.launch {
+            val queriedStocks = Api.queryStocks(
+                search = searchValue,
+                sortingType = selectedSorting,
+                ascending = ascendingSorting,
+                page = ++loadedPage
+            ).orEmpty()
+            if (queriedStocks.size < 50) {
+                endOfList = true
+            } else {
+                loadedStocks.addAll(queriedStocks)
+            }
+        }
     }
 }
 

@@ -12,12 +12,9 @@ object Api {
         return api.getRecommendations().body()
     }
 
-    suspend fun getStocks(page: Int): List<Stock>? {
-        return api.getStocks(page).body()
-    }
-
-    suspend fun queryStocks(search: String, sortingType: SortOption, ascending: Boolean
+    suspend fun queryStocks(
+        search: String, sortingType: SortOption, ascending: Boolean, page: Int = 0
     ): List<Stock>? {
-        return api.getQueryStocks(search, sortingType, ascending).body()
+        return api.getQueryStocks(search, sortingType, ascending, page).body()
     }
 }

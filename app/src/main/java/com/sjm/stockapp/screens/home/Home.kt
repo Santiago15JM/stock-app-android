@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.sjm.stockapp.logic.models.Stock
 import com.sjm.stockapp.ui.theme.Green
@@ -58,7 +59,7 @@ import kotlinx.serialization.Serializable
 object Home
 
 @Composable
-fun Main(nav: NavController, vm: HomeViewModel = HomeViewModel()) {
+fun Main(nav: NavController, vm: HomeViewModel = viewModel()) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {

@@ -1,5 +1,6 @@
 package com.sjm.stockapp.screens.stock_details
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,20 +21,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sjm.stockapp.logic.models.Stock
-import com.sjm.stockapp.ui.theme.Green
+import com.sjm.stockapp.ui.theme.Bearish
+import com.sjm.stockapp.ui.theme.Bullish
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun StockDetails(stock: Stock) {
     val date =
         OffsetDateTime.parse(stock.time).format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+    val perc = (stock.targetTo - stock.targetFrom) / stock.targetFrom * 100
 
     Scaffold { innerPadding ->
         Column(
@@ -47,7 +52,14 @@ fun StockDetails(stock: Stock) {
             Surface(
                 shape = CircleShape,
                 shadowElevation = 8.dp,
-                border = BorderStroke(5.dp, Green),
+                border = BorderStroke(
+                    width = 5.dp,
+                    color = when {
+                        perc < 0f -> Bearish
+                        perc > 0f -> Bullish
+                        else -> Color.Gray
+                    }
+                ),
                 modifier = Modifier
                     .size(120.dp)
                     .align(Alignment.CenterHorizontally)
@@ -65,19 +77,27 @@ fun StockDetails(stock: Stock) {
 
             Spacer(Modifier.height(50.dp))
 
+            Detail("Projected change", String.format("%.1f", perc) + "%")
+
+            when {
+                perc < 0f -> Text("This stock is expected to decline.", color = Bearish)
+                perc > 0f -> Text("This stock is expected to gain value.", color = Bullish)
+                else -> Text("This stock is not expected to change.", color = Color.Gray)
+            }
+
             HorizontalDivider()
             CompositionLocalProvider(
                 LocalTextStyle provides LocalTextStyle.current.copy(fontSize = 20.sp)
             ) {
-                Detail("Ticker", stock.ticker)
-                Detail("Company", stock.company)
-                Detail("Action", stock.action)
-                Detail("Brokerage", stock.brokerage)
-                Detail("Previous rating", stock.ratingFrom)
-                Detail("Current rating", stock.ratingTo)
-                Detail("Previous target price", "${stock.targetFrom}")
-                Detail("Current target price", "${stock.targetTo}")
-                Detail("Issue date", date)
+                Detail("Ticker:", stock.ticker)
+                Detail("Company:", stock.company)
+                Detail("Action:", stock.action)
+                Detail("Brokerage:", stock.brokerage)
+                Detail("Previous rating:", stock.ratingFrom)
+                Detail("Current rating:", stock.ratingTo)
+                Detail("Previous target price:", "${stock.targetFrom}")
+                Detail("Current target price:", "${stock.targetTo}")
+                Detail("Issue date:", date)
             }
             HorizontalDivider()
         }
@@ -90,7 +110,7 @@ fun Detail(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("$label:", fontWeight = FontWeight(600))
+        Text(label, fontWeight = FontWeight(600))
         Text(
             text = value.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
             textAlign = TextAlign.End

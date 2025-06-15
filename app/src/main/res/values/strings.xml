@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Stock App</string>
+    <string name="recommendation_help_text">Recommendations are based on several factors, including the brokerage rating, forecasted target price, and how recently it was issued.</string>
 </resources>

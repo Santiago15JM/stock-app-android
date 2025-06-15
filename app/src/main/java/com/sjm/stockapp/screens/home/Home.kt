@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -25,9 +26,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -45,14 +48,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.sjm.stockapp.R
 import com.sjm.stockapp.logic.models.Stock
+import com.sjm.stockapp.ui.theme.Bearish
+import com.sjm.stockapp.ui.theme.Bullish
 import com.sjm.stockapp.ui.theme.Green
 import kotlinx.serialization.Serializable
 
@@ -62,8 +72,7 @@ object Home
 @Composable
 fun Main(nav: NavController, vm: HomeViewModel = viewModel()) {
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = {
+        modifier = Modifier.fillMaxSize(), bottomBar = {
             NavigationBar {
                 NavigationBarItem(
                     vm.selectedPage == "RECOMMENDATIONS",
@@ -76,8 +85,7 @@ fun Main(nav: NavController, vm: HomeViewModel = viewModel()) {
                     icon = { Icon(Icons.AutoMirrored.Filled.List, "All Stocks") },
                     onClick = { vm.selectedPage = "ALL" })
             }
-        }
-    ) { innerPadding ->
+        }) { innerPadding ->
         when (vm.selectedPage) {
             "RECOMMENDATIONS" -> {
                 Recommendations(vm, nav, innerPadding)
@@ -98,19 +106,31 @@ fun Recommendations(vm: HomeViewModel, nav: NavController, innerPadding: Padding
         modifier = Modifier
             .padding(innerPadding)
             .padding(10.dp)
+            .fillMaxSize()
     ) {
-        Text(
-            "Welcome",
-            fontSize = 36.sp,
-            fontWeight = FontWeight(600),
-            textAlign = TextAlign.Left,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-                .weight(0.4f)
-        )
+        if (vm.showHelpDialog) HelpDialog { vm.showHelpDialog = false }
 
-        Column(Modifier.weight(0.5f)) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                "Welcome",
+                fontSize = 36.sp,
+                fontWeight = FontWeight(600),
+                textAlign = TextAlign.Left,
+                modifier = Modifier.padding(10.dp)
+            )
+
+            IconButton({ vm.showHelpDialog = true }) {
+                Icon(
+                    Icons.Default.Info, "Recommendations help button"
+                )
+            }
+        }
+
+        Column {
             Text(
                 "Trending stocks", fontSize = 18.sp, fontWeight = FontWeight(800)
             )
@@ -125,48 +145,47 @@ fun Recommendations(vm: HomeViewModel, nav: NavController, innerPadding: Padding
             ) {
                 Text("Ticker")
                 Text("Company")
-                Text("Est. Imp.")
+                Text("Forecast")
             }
 
-            if (vm.scoredStocks.isEmpty())
-                Text("Theres no current recommendations")
-            else
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    items(vm.scoredStocks, key = { it.stock.ticker }) {
-                        if (it == vm.scoredStocks[0]) {
-                            Box(Modifier.height(62.dp)) {
-                                Surface(
-                                    color = Green, shape = RoundedCornerShape(6.dp),
-                                    modifier = Modifier
-                                        .zIndex(1f)
-                                        .offset(x = 2.dp)
-                                ) {
-                                    Text(
-                                        "Best choice",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight(900),
-                                        modifier = Modifier.padding(horizontal = 4.dp)
-                                    )
-                                }
-                                Surface(
-                                    border = BorderStroke(2.dp, Green),
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier.offset(y = 14.dp)
-                                ) {
-                                    StockItem(it.stock, nav)
-                                }
+            if (vm.scoredStocks.isEmpty()) Text("Theres no current recommendations")
+            else LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                items(vm.scoredStocks, key = { it.stock.ticker }) {
+                    if (it == vm.scoredStocks[0]) {
+                        Box(Modifier.height(62.dp)) {
+                            Surface(
+                                color = Green,
+                                shape = RoundedCornerShape(6.dp),
+                                modifier = Modifier
+                                    .zIndex(1f)
+                                    .offset(x = 2.dp)
+                            ) {
+                                Text(
+                                    "Best choice",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight(900),
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
                             }
-                        } else StockItem(it.stock, nav)
-                        if (it != vm.scoredStocks.last()) HorizontalDivider(
-                            Modifier.fillMaxWidth(
-                                0.95f
-                            )
+                            Surface(
+                                border = BorderStroke(2.dp, Green),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.offset(y = 14.dp)
+                            ) {
+                                StockItem(it.stock, nav)
+                            }
+                        }
+                    } else StockItem(it.stock, nav)
+                    if (it != vm.scoredStocks.last()) HorizontalDivider(
+                        Modifier.fillMaxWidth(
+                            0.95f
                         )
-                    }
+                    )
                 }
+            }
         }
     }
 }
@@ -176,10 +195,7 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
     val listState = rememberLazyListState()
 
     LaunchedEffect(
-        vm.searchValue,
-        vm.selectedSorting,
-        vm.ascendingSorting,
-        vm.searchActive
+        vm.searchValue, vm.selectedSorting, vm.ascendingSorting, vm.searchActive
     ) {
         vm.updateQueriedStocks()
         listState.scrollToItem(0)
@@ -207,11 +223,9 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
 
                 Row {
                     Box {
-                        AssistChip(
-                            onClick = { vm.sortExpanded = true },
-                            label = {
-                                Text("Sort", fontWeight = FontWeight(700))
-                            })
+                        AssistChip(onClick = { vm.sortExpanded = true }, label = {
+                            Text("Sort", fontWeight = FontWeight(700))
+                        })
                         DropdownMenu(
                             expanded = vm.sortExpanded,
                             onDismissRequest = { vm.sortExpanded = false }) {
@@ -219,12 +233,11 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
                                 DropdownMenuItem(
                                     { Text(it.label) },
                                     onClick = { vm.selectedSorting = it; vm.sortExpanded = false },
-                                    modifier =
-                                        if (vm.selectedSorting == it) Modifier.background(
-                                            MaterialTheme.colorScheme.onPrimary,
-                                            RoundedCornerShape(6.dp)
-                                        )
-                                        else Modifier
+                                    modifier = if (vm.selectedSorting == it) Modifier.background(
+                                        MaterialTheme.colorScheme.onPrimary,
+                                        RoundedCornerShape(6.dp)
+                                    )
+                                    else Modifier
                                 )
                             }
                             HorizontalDivider(Modifier.fillMaxWidth(0.95f))
@@ -271,34 +284,29 @@ fun AllStockScreen(vm: HomeViewModel, nav: NavController, innerPadding: PaddingV
         ) {
             Text("Ticker")
             Text("Company")
-            Text("Est. Imp.")
+            Text("Forecast")
         }
 
-        if (vm.loadedStocks.isEmpty())
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize()
-            ) { Text("No stocks found") }
-        else
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                state = listState
-            ) {
-                items(vm.loadedStocks, key = { it.ticker }) {
-                    StockItem(it, nav)
-                    if (it != vm.loadedStocks.last())
-                        HorizontalDivider(Modifier.fillMaxWidth(0.95f))
-                }
-                item {
-                    if (vm.endOfList)
-                        Text("You reached the end of the list")
-                    else
-                        Button({ vm.loadMore() }) { Text("Load more") }
-                }
+        if (vm.loadedStocks.isEmpty()) Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
+        ) { Text("No stocks found") }
+        else LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            state = listState
+        ) {
+            items(vm.loadedStocks, key = { it.ticker }) {
+                StockItem(it, nav)
+                if (it != vm.loadedStocks.last()) HorizontalDivider(Modifier.fillMaxWidth(0.95f))
             }
+            item {
+                if (vm.endOfList) Text("You reached the end of the list")
+                else Button({ vm.loadMore() }) { Text("Load more") }
+            }
+        }
     }
 }
 
@@ -327,7 +335,44 @@ fun StockItem(stock: Stock, nav: NavController) {
         Text(
             String.format("%.1f", perc) + "%",
             textAlign = TextAlign.End,
-            modifier = Modifier.weight(1.5f)
+            modifier = Modifier.weight(1.5f),
+            color = when {
+                perc < 0f -> Bearish
+                perc > 0f -> Bullish
+                else -> Color.Gray
+            }
         )
+    }
+}
+
+@Composable
+fun HelpDialog(
+    onDismissRequest: () -> Unit,
+) {
+    Dialog(onDismissRequest, properties = DialogProperties()) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    "How are recommendations chosen?",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(600),
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    stringResource(R.string.recommendation_help_text),
+                    textAlign = TextAlign.Center
+                )
+                Button(onDismissRequest) { Text("OK") }
+            }
+        }
     }
 }

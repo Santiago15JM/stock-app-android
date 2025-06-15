@@ -34,6 +34,8 @@ class HomeViewModel : ViewModel() {
 
     private var requestJob: Job? = null
 
+    var showHelpDialog by mutableStateOf(false)
+
     init {
         viewModelScope.launch {
             scoredStocks.addAll(Api.getRecommendations().orEmpty())
